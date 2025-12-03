@@ -1,21 +1,19 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+import os
 
-# Importa el placeholder de la URL.
-# El archivo config.py debe estar en la misma carpeta.
-from .config import DATABASE_URL
+# Use absolute path for SQLite
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'neocare.db')}"
 
-# Crea el motor de conexión a la base de datos
-engine = create_engine(DATABASE_URL)
-
-# Crea una clase SessionLocal. Se usará para crear sesiones de BD.
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base es la clase base que se usará para definir todos los modelos (tablas)
 Base = declarative_base()
 
-# Función de utilidad para obtener una sesión de BD (usado por FastAPI como dependencia)
 def get_db():
     db = SessionLocal()
     try:

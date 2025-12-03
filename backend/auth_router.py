@@ -1,44 +1,41 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from typing import Optional
 
 from database import get_db
 from models import User
 from schemas import UserCreate, UserLogin, Token
-from auth_handler import hash_password, verify_password, create_access_token
+from auth_handler import hash_password, verify_password, create_access_token, verify_token
+from crud import get_user_by_email, create_user
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+router = APIRouter(tags=["auth"])
 
 @router.post("/register")
 async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     """Endpoint para registrar un nuevo usuario"""
     # Verificar si el usuario ya existe
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    existing_user = get_user_by_email(db, user_data.email)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Email already registered",
         )
-    
-    # Crear nuevo usuario
+
+    # Hashear contraseña y crear nuevo usuario mediante capa CRUD
     hashed_password = hash_password(user_data.password)
-    new_user = User(
-        email=user_data.email,
-        hashed_password=hashed_password,
-        is_active=True
-    )
-    
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    
+    user_in = UserCreate(email=user_data.email, password=hashed_password)
+    create_user(db, user_in)
+
     return {"message": "User created successfully"}
 
 @router.post("/login", response_model=Token)
 async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     """Endpoint para iniciar sesión y obtener token JWT"""
     # Buscar usuario por email
-    user = db.query(User).filter(User.email == user_data.email).first()
+    user = get_user_by_email(db, user_data.email)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,3 +53,25 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(user_id=user.id)
     
     return Token(access_token=access_token)
+
+
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    """Dependencia para obtener el usuario actual a partir del token JWT"""
+    user_id = verify_token(token)
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
+    return user
