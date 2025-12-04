@@ -177,15 +177,15 @@ source venv/bin/activate
 **Windows:**
 venv\Scripts\activate
 
-# 2. Instalar dependencias
+**2. Instalar dependencias**
 pip install -r backend/requirements.txt
 
-# 3. Configurar variables de entorno
-# Crear archivo .env en backend/ con:
+### 3. Configurar variables de entorno
+**Crear archivo .env en backend/ con:**
 DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/neocare_db
 SECRET_KEY=trueclave_secreta_aqui
 
-# 4. Arrancar servidor
+**4. Arrancar servidor**
 cd backend
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
