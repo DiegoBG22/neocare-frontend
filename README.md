@@ -184,6 +184,7 @@ pip install -r backend/requirements.txt
 **Crear archivo .env en backend/ con:**
 
 DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/neocare_db
+
 SECRET_KEY=trueclave_secreta_aqui
 
 **4. Arrancar servidor**
