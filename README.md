@@ -168,11 +168,11 @@ La plataforma debe implementar las siguientes funcionalidades:
 
 ### 2. Configuración del Backend
 
-# 1. Crear y activar entorno virtual
+**1. Crear y activar entorno virtual**
 python -m venv venv
-# Linux/Mac:
+**Linux/Mac:**
 source venv/bin/activate
-# Windows:
+**Windows:**
 venv\Scripts\activate
 
 # 2. Instalar dependencias
