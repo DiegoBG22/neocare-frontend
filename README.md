@@ -205,6 +205,6 @@ npm run dev  **o yarn dev**
 
 ### 4. Testing Inicial
 
-1. Verificar backend: Acceder a http://localhost:8000/health
-2. Verificar frontend: Acceder a http://localhost:5173
-3. Probar endpoints: Usar Postman/Thunder Client para probar /register y /login
+**1. Verificar backend:** Acceder a http://localhost:8000/health
+**2. Verificar frontend:** Acceder a http://localhost:5173
+**3. Probar endpoints:** Usar Postman/Thunder Client para probar /register y /login
