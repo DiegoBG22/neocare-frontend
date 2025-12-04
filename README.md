@@ -170,8 +170,10 @@ La plataforma debe implementar las siguientes funcionalidades:
 
 **1. Crear y activar entorno virtual**
 python -m venv venv
+
 **Linux/Mac:**
 source venv/bin/activate
+
 **Windows:**
 venv\Scripts\activate
 
