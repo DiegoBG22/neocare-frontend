@@ -1,7 +1,10 @@
-NeoCare Health - Gestión Interna de Innovación Digital
-Descripción del Proyecto
+**NeoCare Health - Gestión Interna de Innovación Digital**
+
+**Descripción del Proyecto**
 Este proyecto consiste en el desarrollo de una aplicación web interna para la gestión de proyectos de innovación en NeoCare Health, una empresa líder en soluciones de tecnología sanitaria. La plataforma permitirá organizar tareas mediante un tablero Kanban, registrar horas trabajadas y generar informes semanales, todo con el objetivo de mejorar la visibilidad y eficiencia del departamento de Innovación.
-Objetivos del Proyecto
+
+**Objetivos del Proyecto**
+
 Crear un sistema único y unificado para la gestión de proyectos.
 Facilitar el seguimiento del progreso de cada iniciativa.
 Implementar un registro de horas (timesheets) integrado.
