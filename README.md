@@ -219,6 +219,39 @@ npm run dev  **o yarn dev**
   "status": "ok",
   "message": "Servidor funcionando correctamente"
 }
+```
+
+### POST /register
+```json
+// Request
+{
+  "email": "usuario@ejemplo.com",
+  "password": "contraseña123",
+  "full_name": "Nombre"
+}
+
+// Response (éxito)
+{
+  "message": "Usuario registrado exitosamente",
+  "user_id": 1
+}
+```
+### POST /login
+```json
+// Request
+{
+  "email": "usuario@ejemplo.com",
+  "password": "contraseña123"
+}
+
+// Response (éxito)
+{
+  "access_token": "jwt_token_aqui",
+  "token_type": "bearer"
+}
+```
+
+
 
 
 
