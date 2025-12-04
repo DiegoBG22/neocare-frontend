@@ -219,7 +219,6 @@ npm run dev  **o yarn dev**
   "status": "ok",
   "message": "Servidor funcionando correctamente"
 }
-```
 
 
 
