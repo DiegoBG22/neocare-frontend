@@ -214,11 +214,12 @@ npm run dev  **o yarn dev**
 ### Endpoints Disponibles
 
 ### GET /health
-
+```
 {
-  ```"status": "ok",
-  ```"message": "Servidor funcionando correctamente"
+  "status": "ok",
+  "message": "Servidor funcionando correctamente"
 }
+```
 
 
 
