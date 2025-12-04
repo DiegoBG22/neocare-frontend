@@ -168,8 +168,6 @@ La plataforma debe implementar las siguientes funcionalidades:
 
 ### 2. Configuración del Backend
 
-```bash
-
 # 1. Crear y activar entorno virtual
 python -m venv venv
 # Linux/Mac:
@@ -189,7 +187,7 @@ SECRET_KEY=trueclave_secreta_aqui
 cd backend
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-3. Configuración del Frontend
+### 3. Configuración del Frontend
 
 # 1. Instalar dependencias
 cd frontend
