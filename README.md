@@ -199,5 +199,5 @@ npm install  # o yarn install
 **2. Configurar conexión al backend**
 **Asegurar que el backend esté corriendo en http://localhost:8000**
 
-#### 3. Arrancar aplicación
-npm run dev  # o yarn dev
+**3. Arrancar aplicación**
+npm run dev  **o yarn dev**
