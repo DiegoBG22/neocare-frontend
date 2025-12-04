@@ -214,7 +214,7 @@ npm run dev  **o yarn dev**
 ### Endpoints Disponibles
 
 ### GET /health
-```
+```json
 {
   "status": "ok",
   "message": "Servidor funcionando correctamente"
