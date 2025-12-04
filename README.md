@@ -216,8 +216,11 @@ npm run dev  **o yarn dev**
 ### GET /health
 
 {
+  
   "status": "ok",
+  
   "message": "Servidor funcionando correctamente"
+  
 }
 
 
