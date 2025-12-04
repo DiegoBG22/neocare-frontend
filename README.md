@@ -211,3 +211,15 @@ npm run dev  **o yarn dev**
 
 **3. Probar endpoints:** Usar Postman/Thunder Client para probar /register y /login
 
+### Endpoints Disponibles
+
+### GET /health
+
+{
+  "status": "ok",
+  "message": "Servidor funcionando correctamente"
+}
+
+
+
+
