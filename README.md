@@ -187,3 +187,15 @@ SECRET_KEY=trueclave_secreta_aqui
 # 4. Arrancar servidor
 cd backend
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+### 3. Configuración del Frontend
+
+# 1. Instalar dependencias
+cd frontend
+npm install  # o yarn install
+
+# 2. Configurar conexión al backend
+# Asegurar que el backend esté corriendo en http://localhost:8000
+
+# 3. Arrancar aplicación
+npm run dev  # o yarn dev
