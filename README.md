@@ -9,7 +9,7 @@ Es una **aplicación web interna** para gestionar proyectos de innovación dentr
 <img width="790" height="345" alt="image" src="https://github.com/user-attachments/assets/58d5322b-8189-44ea-83ad-fb02b96c815e" />
 
 
-### 👥 Equipo y Roles
+### 👥 Equipo y Roles (PRIMNERA SEMANA)
 
 <img width="838" height="279" alt="image" src="https://github.com/user-attachments/assets/afb61ff9-c9ae-4071-b006-02806166605b" />
 
