@@ -1,6 +1,17 @@
+
 ### 📄 Resumen del Proyecto
 
 Es una **aplicación web interna** para gestionar proyectos de innovación dentro de NeoCare Health. Su objetivo es centralizar la organización de tareas (mediante un tablero Kanban), registrar las horas trabajadas y generar informes semanales automáticos. La meta es mejorar la visibilidad y eficiencia del departamento, reduciendo la dependencia de herramientas dispersas como Excel o Trello
+
+
+### 📅 Cronograma General (7 semanas) 
+
+<img width="790" height="345" alt="image" src="https://github.com/user-attachments/assets/58d5322b-8189-44ea-83ad-fb02b96c815e" />
+
+
+### 👥 Equipo y Roles
+
+<img width="838" height="279" alt="image" src="https://github.com/user-attachments/assets/afb61ff9-c9ae-4071-b006-02806166605b" />
 
 ### 🛠️ Stack Tecnológico
 
