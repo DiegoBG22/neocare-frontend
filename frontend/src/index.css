@@ -1,0 +1,233 @@
+:root {
+  color-scheme: dark;
+  --bg: #020617;
+  --bg-card: #0f172a;
+  --accent: #38bdf8;
+  --text: #e5e7eb;
+  --muted: #64748b;
+  --danger: #f97373;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  background: radial-gradient(circle at top left, #0f172a, #020617);
+  color: var(--text);
+}
+
+/* Login */
+
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.auth-container h1 {
+  font-size: 2rem;
+  letter-spacing: 0.1em;
+}
+
+.auth-form {
+  background: rgba(15, 23, 42, 0.9);
+  padding: 1.5rem 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.8);
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.auth-form input {
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: var(--text);
+}
+
+.auth-form button {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.auth-form button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* Board layout */
+
+.board-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 260px;
+  background: rgba(15, 23, 42, 0.95);
+  border-right: 1px solid #1e293b;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-header button {
+  border: none;
+  background: #ef4444;
+  color: white;
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+
+.board-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.board-list li {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.board-list li.active,
+.board-list li:hover {
+  background: #0f172a;
+  color: var(--text);
+}
+
+.sidebar-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-form input {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: var(--text);
+}
+
+.sidebar-form button {
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  background: var(--accent);
+  color: #020617;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Main board */
+
+.board-main {
+  flex: 1;
+  padding: 1.5rem 2rem;
+}
+
+.board-main h1 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.lists-section {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.list-column {
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  min-width: 260px;
+}
+
+.list-column ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.75rem 0;
+}
+
+.list-column li {
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.4rem;
+  background: #020617;
+  margin-bottom: 0.3rem;
+}
+
+.list-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.list-form input {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: var(--text);
+}
+
+.list-form button {
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  background: var(--accent);
+  color: #020617;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Errores */
+
+.error {
+  color: var(--danger);
+  font-size: 0.9rem;
+}
