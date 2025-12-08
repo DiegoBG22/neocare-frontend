@@ -24,8 +24,15 @@ Es una **aplicación web interna** para gestionar proyectos de innovación dentr
 - **Autenticación:** JWT (JSON Web Tokens) 
 - **Funcionalidad Drag & Drop:** dnd-kit
 
-### 💻 Pasos para Ejecutar el Backend
-El backend está configurado para ejecutarse localmente usando **Python y SQLite**.
+### 💻 Backend: Arquitectura y Funcionalidades
+
+**Neocare Backend** es una **API REST** desarrollada con **FastAPI** y **SQLite** (para desarrollo local) que expone endpoints para autenticación con JWT, y la gestión completa de **usuarios**, **tableros** y **listas** (elementos clave del tablero Kanban).
+
+✅ **Funcionalidades ya Operativas (Diciembre 2024)**
+El Backend está **completado (Auth + CRUD)** y listo para la integración con el Frontend.
+
+
+Las funcionalidades disponibles a través de sus endpoints son:
 
 1. #### Clonar y Acceder:
 
