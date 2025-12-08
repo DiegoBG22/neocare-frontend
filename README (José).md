@@ -45,6 +45,40 @@ El Backend está **completado (Auth + CRUD)** y listo para la integración con e
 
 **IMPORTANTE:** Todos los endpoints (excepto /login y /register) están protegidos y requieren el **Token JWT** en el header Authorization: Bearer <token>.
 
+### 🔒 Flujo de Autenticación con JWT
+La aplicación utiliza **JSON Web Tokens (JWT)** para gestionar la sesión del usuario. Este proceso asegura que, tras el inicio de sesión, el Frontend pueda realizar peticiones seguras al Backend.
+
+**Pasos del Flujo de Autenticación**
+
+1. **Inicio de Sesión (Login):**
+
+   - El Frontend envía una petición POST al endpoint /api/auth/login con las credenciales (email y password).
+
+2. **Generación del Token (Backend):**
+
+   - El Backend valida las credenciales. Si son correctas, genera un **JWT** que contiene la información del usuario (payload) y lo firma con la SECRET_KEY.
+
+   - El Backend devuelve este access_token en la respuesta al Frontend.
+
+3. **Almacenamiento del Token (Frontend):**
+
+   - El Frontend recibe el access_token y lo **almacena** localmente (típicamente en localStorage o sessionStorage).
+
+4. **Peticiones Protegidas (Acceso a Recursos):**
+
+   - Para acceder a cualquier endpoint protegido (como /api/boards/), el Frontend debe incluir el access_token en el header de la petición, con el formato:
+     
+     <img width="711" height="49" alt="image" src="https://github.com/user-attachments/assets/81695ab1-82a8-47d1-811e-676f8c16406f" />
+
+5. **Validación del Token (Backend):**
+
+   - El Backend intercepta la petición, **descodifica y valida** la firma del JWT usando la SECRET_KEY. Si el token es válido y no ha expirado, procesa la petición y devuelve la respuesta. Si es inválido, devuelve un error **401 Unauthorized**.
+
+Este flujo garantiza que el estado de la sesión no se guarde en el servidor (Backend stateless), mejorando la escalabilidad de la API.
+
+📍 Dónde Introducirlo
+Debes colocar esta nueva sección (Flujo de Autenticación con JWT) justo después de la tabla de funcionalidades operativas del Backend, antes de la sección de Pasos para Ejecutar el Backend.
+
 ### ⚙️ Pasos para Ejecutar el Backend (Desarrollo Local)
 El backend está configurado para ejecutarse localmente usando **Python** y **SQLite**.
 
