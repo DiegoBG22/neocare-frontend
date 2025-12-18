@@ -1,0 +1,375 @@
+:root {
+  color-scheme: dark;
+  --bg: #020617;
+  --bg-card: #0f172a;
+  --accent: #38bdf8;
+  --text: #e5e7eb;
+  --muted: #64748b;
+  --danger: #f97373;
+  --success-color: #22c55e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top left, #0f172a, #020617);
+  color: var(--text);
+  overflow: hidden; 
+}
+
+/* --- Login / Auth (AJUSTADO PARA ALINEACIÓN PERFECTA) --- */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.auth-form {
+  background: rgba(15, 23, 42, 0.9);
+  padding: 1.5rem 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.8);
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Ajuste para que el texto de Email/Contraseña no flote a la izquierda */
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+}
+
+.auth-form input {
+  width: 100%; /* Asegura que ocupe todo el ancho del formulario */
+  margin-top: 0.5rem; /* Espacio entre el texto y el cuadro */
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: var(--text);
+}
+
+.auth-form button {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* --- Board Layout --- */
+.board-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: rgba(15, 23, 42, 0.95);
+  border-right: 1px solid #1e293b;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  /* Asegura que nada se desborde de la barra lateral */
+  overflow-x: hidden;
+}
+
+.board-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.lists-section {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  height: 100%;
+  padding-bottom: 1rem;
+}
+
+.list-column {
+  background: #101827;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  width: 300px;
+  min-width: 300px;
+  max-height: 100%;
+  border: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+.cards-container {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+  /* AÑADIMOS ESTO: Espacio arriba para que la tarjeta no se corte al subir */
+  padding-top: 5px; 
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+/* --- Scrollbar --- */
+.cards-container::-webkit-scrollbar,
+.board-main::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.cards-container::-webkit-scrollbar-thumb,
+.board-main::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 10px;
+}
+
+.card-item {
+  padding: 1rem;
+  border-radius: 0.6rem;
+  background: #1e293b;
+  margin-bottom: 0.75rem;
+  border: 1px solid #334155;
+  transition: transform 0.1s ease, border-color 0.2s;
+  cursor: grab;
+}
+
+.card-item:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* --- ESTILOS ESPECÍFICOS PARA LOS ICONOS A LA DERECHA (TARJETAS) --- */
+.edit-card-form-combined {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.edit-card-row-wrapper {
+  display: flex;
+  align-items: center; 
+  gap: 8px;
+  width: 100%;
+}
+
+.edit-card-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1; 
+}
+
+.edit-card-inputs input {
+  width: 100%;
+  background: #2d3748;
+  border: 1px solid #4a5568;
+  color: white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.edit-icons-column {
+  display: flex;
+  flex-direction: column; 
+  gap: 10px;
+  justify-content: center;
+  /* Evita que los iconos se muevan si el texto es largo */
+  flex-shrink: 0;
+}
+
+/* --- FORMULARIOS LÍNEA (TABLEROS Y LISTAS) --- */
+.edit-form-inline, .edit-list-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.edit-form-inline input, .edit-list-form input {
+  flex: 1;
+  min-width: 0;
+  background: #2d3748;
+  border: 1px solid #4a5568;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* --- ICONOS ASPA Y X --- */
+.confirm-icon-btn, .cancel-icon-btn {
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer;
+  font-size: 1.1rem !important;
+  padding: 2px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.confirm-icon-btn:hover, .cancel-icon-btn:hover { transform: scale(1.2); }
+.confirm-icon-btn { color: #4ade80 !important; }
+.cancel-icon-btn { color: #f87171 !important; }
+
+/* --- BOTONES ACCIÓN --- */
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.card-actions button {
+  border: none;
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.4rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.delete-btn { background: #7f1d1d; color: #fecaca; }
+.edit-btn { background: #0c4a6e; color: #bae6fd; }
+
+/* --- MODAL Y NOTIFICACIONES --- */
+.custom-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 9999;
+}
+
+.custom-modal-content {
+  background-color: #1e1e2e;
+  padding: 2rem;
+  border-radius: 1rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  border: 1px solid #333;
+}
+
+.success, .error {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  color: white;
+  z-index: 10000;
+}
+.success { background-color: #059669; border-left: 5px solid #34d399; }
+.error { background-color: #dc2626; border-left: 5px solid #f87171; }
+
+.neocare-logo {
+  font-size: 3.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+  
+  /* Color blanco base con resplandor azul constante (alumbrado) */
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 
+               0 0 20px rgba(56, 189, 248, 0.4);
+
+  /* Configuración del gradiente para la luz que barre */
+  background: linear-gradient(
+    to right, 
+    rgba(255, 255, 255, 0) 20%, 
+    rgba(255, 255, 255, 1) 50%, 
+    rgba(255, 255, 255, 0) 80%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* Animación de la luz */
+  animation: lightSweep 3s infinite linear;
+}
+
+@keyframes lightSweep {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Layout General */
+.board-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden; /* Evita scroll en toda la página */
+}
+
+/* Sidebar Scroll */
+.sidebar {
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-scroll-container {
+  flex: 1;
+  overflow-y: auto; /* Scroll vertical para tableros */
+}
+
+/* Main Content Scroll */
+.board-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.lists-section {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto; /* Scroll horizontal para las listas */
+  align-items: flex-start;
+  padding: 20px;
+  gap: 20px;
+}
+
+/* Columna de tarjetas Scroll */
+.list-column {
+  min-width: 300px;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%; /* No se sale de la pantalla */
+}
+
+.cards-scroll-wrapper {
+  flex: 1;
+  overflow-y: auto; /* Scroll vertical para las tarjetas dentro de la lista */
+  padding-right: 5px;
+}
