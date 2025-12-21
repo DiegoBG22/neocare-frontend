@@ -1,10 +1,19 @@
-# Neocare – Guía de integración (Backend + Frontend para Arianna)
+# Neocare – Gestión de proyectos (Backend + Frontend)
 
-> Nota: Este README está pensado para la **rama `Union/backend/frontend`** del repo `neocare-frontend`. Aquí tienes:
-> - Resumen rápido de cómo levantar backend y frontend.
-> - Estructura recomendada del frontend.
-> - TODO el código base del frontend, ordenado por archivos, listo para copiar/pegar.
-> Después puedes borrar o simplificar estas notas cuando el proyecto esté más avanzado.
+> Este README corresponde al estado del proyecto en la **rama `semana3-proyecto_completo`** del repo `neocare-frontend`.
+> Basado en la guía de integración original, actualizado para la versión completa de la semana 3.
+> - Explica cómo levantar backend y frontend en local.
+> - Resume los endpoints principales (auth, tableros, listas y tarjetas).
+> - Incluye el código base del frontend (React + Vite) listo para copiar/pegar.
+
+---
+
+## 0. Resumen del proyecto y estado (Semana 3)
+
+- Aplicación interna para gestionar proyectos de innovación de NeoCare Health mediante un tablero Kanban.
+- Backend en **FastAPI + SQLite (desarrollo)** con autenticación JWT y CRUD de tableros, listas y tarjetas.
+- Frontend en **React + Vite + TypeScript**, con login y vista de tablero conectados al backend.
+- Estado Semana 3: backend funcional, frontend mínimo integrado y listo para iterar en diseño/UX.
 
 ---
 
@@ -106,6 +115,26 @@ También requieren header `Authorization: Bearer <token>`:
     }
     ```
 - `DELETE /api/lists/{list_id}` – Eliminar lista.
+
+### 2.4. Tarjetas (Cards)
+
+También requieren header `Authorization: Bearer <token>`:
+
+- `GET /api/cards/by-list/{list_id}` – Listar tarjetas de una lista.
+- `POST /api/cards/` – Crear una tarjeta nueva en una lista.
+  - Body ejemplo:
+    ```json
+    {
+      "title": "Nueva tarea",
+      "description": "Descripción opcional",
+      "due_date": "2024-12-31T23:59:59",
+      "list_id": 1,
+      "user_id": 1
+    }
+    ```
+- `PATCH /api/cards/{card_id}/move` – Mover una tarjeta dentro de una lista o a otra lista (reordenando la columna).
+- `PUT /api/cards/{card_id}` – Actualizar los campos de una tarjeta.
+- `DELETE /api/cards/{card_id}` – Eliminar una tarjeta.
 
 ---
 
