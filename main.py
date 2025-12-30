@@ -5,6 +5,7 @@ import models
 from auth_router import router as auth_router
 from board_router import router as board_router
 from list_router import router as list_router
+from report_router import router as report_router
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -22,6 +23,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api/auth", tags=["Autenticación"])
 app.include_router(board_router, prefix="/api/boards", tags=["Tableros"])
 app.include_router(list_router, prefix="/api/lists", tags=["Listas"])
+app.include_router(report_router)
 
 @app.get("/api/health")
 async def health_check():
