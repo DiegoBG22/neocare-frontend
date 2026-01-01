@@ -12,6 +12,7 @@ from board_router import router as board_router
 from list_router import router as list_router
 from card_router import router as card_router
 from timesheet_router import router as timesheet_router
+from report_router import router as report_router
 
 # Crear las tablas de la base de datos
 Base.metadata.create_all(bind=engine)
@@ -56,6 +57,7 @@ app.include_router(board_router, prefix="/api/boards", tags=["Tableros"])
 app.include_router(list_router, prefix="/api/lists", tags=["Listas"])
 app.include_router(card_router, prefix="/api/cards", tags=["Tarjetas"])
 app.include_router(timesheet_router, prefix="/api/timesheets", tags=["Timesheets"])
+app.include_router(report_router)
 
 @app.get("/api/health")
 async def health_check():

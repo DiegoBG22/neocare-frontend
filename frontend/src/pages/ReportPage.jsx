@@ -112,31 +112,32 @@ function ReportPage({ token, onLogout }) {
   }, [token, selectedBoardId, week]);
 
   const computedSummary = useMemo(() => {
-    const completed = Array.isArray(summary?.completed)
-      ? summary.completed
-      : Array.isArray(summary?.completadas)
-      ? summary.completadas
-      : [];
+    const mapRaw = (raw) => {
+      if (Array.isArray(raw)) {
+        return { count: raw.length, items: raw };
+      }
+      const n = Number(raw);
+      if (Number.isFinite(n) && n > 0) {
+        return { count: n, items: [] };
+      }
+      return { count: 0, items: [] };
+    };
 
-    const overdue = Array.isArray(summary?.overdue)
-      ? summary.overdue
-      : Array.isArray(summary?.vencidas)
-      ? summary.vencidas
-      : [];
+    const completedRaw = summary?.completed ?? summary?.completadas;
+    const overdueRaw = summary?.overdue ?? summary?.vencidas;
+    const createdRaw = summary?.created ?? summary?.nuevas;
 
-    const created = Array.isArray(summary?.created)
-      ? summary.created
-      : Array.isArray(summary?.nuevas)
-      ? summary.nuevas
-      : [];
-
-    return { completed, overdue, created };
+    return {
+      completed: mapRaw(completedRaw),
+      overdue: mapRaw(overdueRaw),
+      created: mapRaw(createdRaw),
+    };
   }, [summary]);
 
   const handleExportUsers = () => {
     if (!hoursByUser.length) return;
     downloadCsv('reporte_horas_por_usuario.csv', hoursByUser, [
-      { label: 'Usuario', accessor: (r) => r.user_name || r.user || r.email || r.user_id },
+      { label: 'Usuario', accessor: (r) => r.user_name || r.user || r.user_email || r.email || r.user_id },
       { label: 'Total horas', accessor: (r) => r.total_hours },
       { label: 'Nº tareas', accessor: (r) => r.tasks_count },
     ]);
@@ -249,12 +250,12 @@ function ReportPage({ token, onLogout }) {
               <div className="report-summary-grid">
                 <div className="report-card">
                   <h3>Completadas</h3>
-                  <p className="report-kpi">{computedSummary.completed.length}</p>
-                  {computedSummary.completed.length === 0 ? (
+                  <p className="report-kpi">{computedSummary.completed.count}</p>
+                  {computedSummary.completed.count === 0 ? (
                     <p className="report-empty">No hubo tareas completadas esta semana.</p>
                   ) : (
                     <ul className="report-task-list">
-                      {computedSummary.completed.slice(0, 5).map((t) =>
+                      {computedSummary.completed.items.slice(0, 5).map((t) =>
                         renderTaskItem(t, 'green'),
                       )}
                     </ul>
@@ -263,12 +264,12 @@ function ReportPage({ token, onLogout }) {
 
                 <div className="report-card">
                   <h3>Vencidas</h3>
-                  <p className="report-kpi">{computedSummary.overdue.length}</p>
-                  {computedSummary.overdue.length === 0 ? (
+                  <p className="report-kpi">{computedSummary.overdue.count}</p>
+                  {computedSummary.overdue.count === 0 ? (
                     <p className="report-empty">No hubo tareas vencidas esta semana.</p>
                   ) : (
                     <ul className="report-task-list">
-                      {computedSummary.overdue.slice(0, 5).map((t) =>
+                      {computedSummary.overdue.items.slice(0, 5).map((t) =>
                         renderTaskItem(t, 'red'),
                       )}
                     </ul>
@@ -277,12 +278,12 @@ function ReportPage({ token, onLogout }) {
 
                 <div className="report-card">
                   <h3>Nuevas</h3>
-                  <p className="report-kpi">{computedSummary.created.length}</p>
-                  {computedSummary.created.length === 0 ? (
+                  <p className="report-kpi">{computedSummary.created.count}</p>
+                  {computedSummary.created.count === 0 ? (
                     <p className="report-empty">No hubo nuevas tareas esta semana.</p>
                   ) : (
                     <ul className="report-task-list">
-                      {computedSummary.created.slice(0, 5).map((t) =>
+                      {computedSummary.created.items.slice(0, 5).map((t) =>
                         renderTaskItem(t, 'blue'),
                       )}
                     </ul>
