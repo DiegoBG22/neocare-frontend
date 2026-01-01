@@ -96,3 +96,19 @@ export function moveCard(token, cardId, listId, newOrder) {
     body: { list_id: listId, new_order: newOrder },
   });
 }
+
+/* 📊 Reportes semanales (frontend) */
+export function getReportSummary(token, boardId, week) {
+  const qs = week ? `?week=${encodeURIComponent(week)}` : '';
+  return request(`/report/${boardId}/summary${qs}`, { token });
+}
+
+export function getReportHoursByUser(token, boardId, week) {
+  const qs = week ? `?week=${encodeURIComponent(week)}` : '';
+  return request(`/report/${boardId}/hours-by-user${qs}`, { token });
+}
+
+export function getReportHoursByCard(token, boardId, week) {
+  const qs = week ? `?week=${encodeURIComponent(week)}` : '';
+  return request(`/report/${boardId}/hours-by-card${qs}`, { token });
+}

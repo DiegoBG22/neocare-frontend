@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getBoards,
   createBoard,
@@ -33,6 +34,7 @@ import {
 import { SortableCard } from '../components/SortableCard';
 
 function BoardPage({ token, onLogout }) {
+  const navigate = useNavigate();
   const [boards, setBoards] = useState([]);
   const [selectedBoardId, setSelectedBoardId] = useState(null);
   const [lists, setLists] = useState([]);
@@ -422,7 +424,16 @@ function BoardPage({ token, onLogout }) {
       <main className="board-main">
         {selectedBoard ? (
           <>
-            <h1 style={{ marginBottom: '20px' }}>{selectedBoard.title}</h1>
+            <div className="board-header-with-report">
+              <h1 style={{ marginBottom: '20px' }}>{selectedBoard.title}</h1>
+              <button
+                type="button"
+                className="report-link-btn"
+                onClick={() => navigate('/report')}
+              >
+                Ver informe semanal
+              </button>
+            </div>
             <section className="lists-section">
               {lists.map((list) => (
                 <div key={list.id} className="list-column">
