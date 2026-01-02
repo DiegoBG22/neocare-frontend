@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getBoards,
   getReportSummary,
@@ -58,6 +59,7 @@ function downloadCsv(filename, rows, columns) {
 }
 
 function ReportPage({ token, onLogout }) {
+  const navigate = useNavigate();
   const [boards, setBoards] = useState([]);
   const [selectedBoardId, setSelectedBoardId] = useState(null);
   const [week, setWeek] = useState(getCurrentWeekString);
@@ -87,7 +89,7 @@ function ReportPage({ token, onLogout }) {
 
   useEffect(() => {
     const loadReport = async () => {
-      if (!selectedBoardId) return;
+      if (!selectedBoardId || !week) return;
       setLoading(true);
       setError('');
       try {
@@ -228,15 +230,24 @@ function ReportPage({ token, onLogout }) {
               Visualiza tareas completadas, vencidas, nuevas y horas trabajadas por persona y tarjeta.
             </p>
           </div>
-          <div className="report-filters">
-            <label className="report-filter">
-              <span>Semana</span>
-              <input
-                type="week"
-                value={week}
-                onChange={(e) => setWeek(e.target.value)}
-              />
-            </label>
+          <div className="report-actions">
+            <button
+              type="button"
+              className="report-back-btn"
+              onClick={() => navigate('/')}
+            >
+              ← Volver al tablero
+            </button>
+            <div className="report-filters">
+              <label className="report-filter">
+                <span>Semana</span>
+                <input
+                  type="week"
+                  value={week}
+                  onChange={(e) => setWeek(e.target.value)}
+                />
+              </label>
+            </div>
           </div>
         </header>
 

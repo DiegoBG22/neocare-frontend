@@ -486,6 +486,28 @@ input:focus {
   margin-bottom: 1.5rem;
 }
 
+.report-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.report-back-btn {
+  border-radius: 999px;
+  border: 1px solid #64748b;
+  background: transparent;
+  color: #e2e8f0;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.report-back-btn:hover {
+  background: #1f2937;
+  box-shadow: 0 0 10px rgba(148, 163, 184, 0.5);
+}
+
 .report-filters {
   display: flex;
   gap: 1rem;
