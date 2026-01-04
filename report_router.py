@@ -3,32 +3,6 @@ from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 from database import get_db
 from auth_handler import verify_token
-from jose import JWTError
-
-router = APIRouter(prefix="/report", tags=["Report"])
-
-from fastapi.security import OAuth2PasswordBearer
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
-
-def get_current_user_id(token: str = Depends(oauth2_scheme)):
-    user_id = verify_token(token)
-    if user_id is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return user_id
-
-from datetime import datetime, timedelta
-
-def week_to_dates(week: str):
-    year, week_num = week.split("-W")
-    first_day = datetime.strptime(f"{year}-W{week_num}-1", "%Y-W%W-%w").date()
-    last_day = first_day + timedelta(days=6)
-    return first_day , last_day
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session
-from datetime import date, datetime, timedelta
-from database import get_db
-from auth_handler import verify_token
 from fastapi.security import OAuth2PasswordBearer
 
 router = APIRouter(prefix="/report", tags=["Report"])
@@ -63,8 +37,7 @@ def week_to_dates(week: str):
             status_code=400,
             detail="Invalid week format. Expected YYYY-Www"
         )
-
-
+        
 @router.get("/{board_id}/summary")
 def report_summary(
     board_id: int,
