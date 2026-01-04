@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from datetime import date
+from datetime import date, datetime, timedelta
 from database import get_db
 from auth_handler import verify_token
 from jose import JWTError
@@ -44,10 +44,25 @@ def get_current_user_id(token: str = Depends(oauth2_scheme)):
 
 
 def week_to_dates(week: str):
-    year, week_num = week.split("-W")
-    first_day = datetime.strptime(f"{year}-W{week_num}-1", "%Y-W%W-%w").date()
-    last_day = first_day + timedelta(days=6)
-    return first_day, last_day
+    try:
+        if not week or "-W" not in week:
+            raise ValueError("Formato de semana inválido")
+
+        year, week_num = week.split("-W")
+
+        first_day = datetime.strptime(
+            f"{year}-W{week_num}-1",
+            "%Y-W%W-%w"
+        ).date()
+
+        last_day = first_day + timedelta(days=6)
+        return first_day, last_day
+
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid week format. Expected YYYY-Www"
+        )
 
 
 @router.get("/{board_id}/summary")
