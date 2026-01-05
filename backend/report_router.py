@@ -1,183 +1,185 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from database import get_db
-from auth_handler import verify_token
-from fastapi.security import OAuth2PasswordBearer
+from models import Board, Card, List as ListModel, Timesheet, User
+from auth_router import get_current_user
+from crud import get_board_by_id_and_user
+
 
 router = APIRouter(prefix="/report", tags=["Report"])
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-
-def get_current_user_id(token: str = Depends(oauth2_scheme)):
-    user_id = verify_token(token)
-    if user_id is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return user_id
-
-
-def week_to_dates(week: str):
+def week_to_dates(week: str) -> tuple[date, date]:
+    """Convierte una semana en formato YYYY-Www en rango de fechas (lunes-domingo)."""
     try:
-        if not week or "-W" not in week:
-            raise ValueError("Formato de semana inválido")
-
-        year, week_num = week.split("-W")
-
-        first_day = datetime.strptime(
-            f"{year}-W{week_num}-1",
-            "%Y-W%W-%w"
-        ).date()
-
-        last_day = first_day + timedelta(days=6)
-        return first_day, last_day
-
-    except Exception:
+        year_str, week_part = week.split("-W")
+        year = int(year_str)
+        week_number = int(week_part)
+    except (ValueError, AttributeError):
         raise HTTPException(
             status_code=400,
-            detail="Invalid week format. Expected YYYY-Www"
+            detail="Invalid week format. Expected 'YYYY-Www', e.g. '2025-W01'.",
         )
-        
+
+    first_day = datetime.strptime(f"{year}-W{week_number}-1", "%Y-W%W-%w").date()
+    last_day = first_day + timedelta(days=6)
+    return first_day, last_day
+
+
 @router.get("/{board_id}/summary")
 def report_summary(
     board_id: int,
-    week: str = Query(...),
+    week: str = Query(..., description="Semana en formato YYYY-Www, por ejemplo 2025-W01"),
     db: Session = Depends(get_db),
-    user_id: int = Depends(get_current_user_id)
+    current_user: User = Depends(get_current_user),
 ):
-    start_date, end_date = week_to_dates(week)
-
-    board = db.execute(
-        "SELECT id FROM boards WHERE id = :board_id AND user_id = :user_id",
-        {"board_id": board_id, "user_id": user_id}
-    ).fetchone()
-
-    if not board:
+    board = get_board_by_id_and_user(db, board_id, current_user.id)
+    if board is None:
         raise HTTPException(status_code=403, detail="Board not accessible")
 
-    created = db.execute(
-        """
-        SELECT COUNT(*) FROM cards
-        WHERE board_id = :board_id
-        AND created_at BETWEEN :start AND :end
-        """,
-        {"board_id": board_id, "start": start_date, "end": end_date}
-    ).scalar()
+    start_date, end_date = week_to_dates(week)
+    start_dt = datetime.combine(start_date, datetime.min.time())
+    end_dt = datetime.combine(end_date, datetime.max.time())
 
-    completed = db.execute(
-        """
-        SELECT COUNT(*) FROM cards
-        WHERE board_id = :board_id
-        AND status = 'completed'
-        AND updated_at BETWEEN :start AND :end
-        """,
-        {"board_id": board_id, "start": start_date, "end": end_date}
-    ).scalar()
+    created_count = (
+        db.query(func.count(Card.id))
+        .join(ListModel, ListModel.id == Card.list_id)
+        .join(Board, Board.id == ListModel.board_id)
+        .filter(
+            Board.id == board_id,
+            Board.user_id == current_user.id,
+            Card.created_at >= start_dt,
+            Card.created_at <= end_dt,
+        )
+        .scalar()
+    ) or 0
 
-    overdue = db.execute(
-        """
-        SELECT COUNT(*) FROM cards
-        WHERE board_id = :board_id
-        AND due_date < :today
-        AND status != 'completed'
-        """,
-        {"board_id": board_id, "today": date.today()}
-    ).scalar()
+    completed_count = (
+        db.query(func.count(Card.id))
+        .join(ListModel, ListModel.id == Card.list_id)
+        .join(Board, Board.id == ListModel.board_id)
+        .filter(
+            Board.id == board_id,
+            Board.user_id == current_user.id,
+            Card.updated_at >= start_dt,
+            Card.updated_at <= end_dt,
+            Card.due_date != None,  # type: ignore[comparison-overlap]
+            Card.due_date <= end_dt,
+        )
+        .scalar()
+    ) or 0
+
+    overdue_count = (
+        db.query(func.count(Card.id))
+        .join(ListModel, ListModel.id == Card.list_id)
+        .join(Board, Board.id == ListModel.board_id)
+        .filter(
+            Board.id == board_id,
+            Board.user_id == current_user.id,
+            Card.due_date != None,  # type: ignore[comparison-overlap]
+            Card.due_date < date.today(),
+        )
+        .scalar()
+    ) or 0
 
     return {
-        "created": created,
-        "completed": completed,
-        "overdue": overdue
+        "created": int(created_count),
+        "completed": int(completed_count),
+        "overdue": int(overdue_count),
     }
+
 
 @router.get("/{board_id}/hours-by-user")
 def report_hours_by_user(
     board_id: int,
     week: str = Query(...),
     db: Session = Depends(get_db),
-    user_id: int = Depends(get_current_user_id)
+    current_user: User = Depends(get_current_user),
 ):
+    board = get_board_by_id_and_user(db, board_id, current_user.id)
+    if board is None:
+        raise HTTPException(status_code=403, detail="Board not accessible")
+
     start_date, end_date = week_to_dates(week)
 
-    rows = db.execute(
-        """
-        SELECT 
-            t.user_id,
-            u.email AS user_email,
-            SUM(t.hours) AS total_hours,
-            COUNT(DISTINCT t.card_id) AS tasks_count
-        FROM timesheets t
-        JOIN users u ON u.id = t.user_id
-        JOIN cards c ON c.id = t.card_id
-        WHERE c.board_id = :board_id
-          AND t.date BETWEEN :start AND :end
-        GROUP BY t.user_id, u.email
-        """,
-        {
-            "board_id": board_id,
-            "start": start_date,
-            "end": end_date
-        }
-    ).fetchall()
+    rows = (
+        db.query(
+            Timesheet.user_id.label("user_id"),
+            User.email.label("user_email"),
+            func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
+            func.count(func.distinct(Timesheet.card_id)).label("tasks_count"),
+        )
+        .join(User, User.id == Timesheet.user_id)
+        .join(Card, Card.id == Timesheet.card_id)
+        .join(ListModel, ListModel.id == Card.list_id)
+        .join(Board, Board.id == ListModel.board_id)
+        .filter(
+            Board.id == board_id,
+            Board.user_id == current_user.id,
+            Timesheet.date >= start_date,
+            Timesheet.date <= end_date,
+        )
+        .group_by(Timesheet.user_id, User.email)
+        .all()
+    )
 
     return [
         {
-            "user_id": r.user_id,
-            "user_email": r.user_email,
-            "total_hours": r.total_hours,
-            "tasks_count": r.tasks_count
+            "user_id": row.user_id,
+            "user_email": row.user_email,
+            "total_hours": float(row.total_hours or 0),
+            "tasks_count": int(row.tasks_count or 0),
         }
-        for r in rows
+        for row in rows
     ]
+
 
 @router.get("/{board_id}/hours-by-card")
 def report_hours_by_card(
     board_id: int,
     week: str = Query(...),
     db: Session = Depends(get_db),
-    user_id: int = Depends(get_current_user_id)
+    current_user: User = Depends(get_current_user),
 ):
-    start_date, end_date = week_to_dates(week)
-
-    # Verificar que el tablero pertenece al usuario
-    board = db.execute(
-        "SELECT id FROM boards WHERE id = :board_id AND user_id = :user_id",
-        {"board_id": board_id, "user_id": user_id}
-    ).fetchone()
-
-    if not board:
+    board = get_board_by_id_and_user(db, board_id, current_user.id)
+    if board is None:
         raise HTTPException(status_code=403, detail="Board not accessible")
 
-    rows = db.execute(
-        """
-        SELECT 
-            cards.id AS card_id,
-            cards.title AS title,
-            cards.status AS status,
-            users.email AS responsible,
-            SUM(worklogs.hours) AS total_hours
-        FROM worklogs
-        JOIN cards ON worklogs.card_id = cards.id
-        JOIN users ON worklogs.user_id = users.id
-        WHERE cards.board_id = :board_id
-        AND worklogs.date BETWEEN :start AND :end
-        GROUP BY cards.id, cards.title, cards.status, users.email
-        ORDER BY total_hours DESC
-        """,
-        {
-            "board_id": board_id,
-            "start": start_date,
-            "end": end_date
-        }
-    ).fetchall()
+    start_date, end_date = week_to_dates(week)
+
+    rows = (
+        db.query(
+            Card.id.label("card_id"),
+            Card.title.label("title"),
+            User.email.label("responsible"),
+            func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
+        )
+        .join(ListModel, ListModel.id == Card.list_id)
+        .join(Board, Board.id == ListModel.board_id)
+        .outerjoin(Timesheet, Timesheet.card_id == Card.id)
+        .outerjoin(User, User.id == Card.user_id)
+        .filter(
+            Board.id == board_id,
+            Board.user_id == current_user.id,
+            Timesheet.date >= start_date,
+            Timesheet.date <= end_date,
+        )
+        .group_by(Card.id, Card.title, User.email)
+        .order_by(func.coalesce(func.sum(Timesheet.hours), 0).desc())
+        .all()
+    )
 
     return [
         {
             "card_id": row.card_id,
             "title": row.title,
-            "status": row.status,
+            "status": "sin_estado",
             "responsible": row.responsible,
-            "total_hours": row.total_hours or 0
+            "total_hours": float(row.total_hours or 0),
         }
         for row in rows
     ]
