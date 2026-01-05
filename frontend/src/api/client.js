@@ -30,8 +30,20 @@ async function request(path, { method = 'GET', token, body, isFormData = false }
     data = null; 
   }
 
-  if (!res.ok) {
+  if (!res.ok && res.status !== 304) {
     console.error("❌ Error detallado del servidor:", data);
+    // Manejo global de sesión expirada o token inválido (excepto en login)
+    if (res.status === 401 && !path.startsWith('/api/auth/login')) {
+      try {
+        localStorage.removeItem('authToken');
+      } catch (e) {
+        // Ignoramos errores de acceso a localStorage (modo privado, etc.)
+      }
+      // Forzamos recarga para volver a la pantalla de login limpia
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    }
     const error = { status: res.status, response: { data } };
     throw error;
   }

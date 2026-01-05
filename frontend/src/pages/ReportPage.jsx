@@ -81,6 +81,9 @@ function ReportPage({ token, onLogout }) {
           setSelectedBoardId(data[0].id);
         }
       } catch (err) {
+        if (err && err.status === 304) {
+          return;
+        }
         setError(extractErrorMessage(err, 'Error cargando tableros'));
       }
     };
@@ -102,6 +105,9 @@ function ReportPage({ token, onLogout }) {
         setHoursByUser(Array.isArray(u) ? u : []);
         setHoursByCard(Array.isArray(c) ? c : []);
       } catch (err) {
+        if (err && err.status === 304) {
+          return;
+        }
         setError(extractErrorMessage(err, 'Error cargando informe semanal (¿backend listo?)'));
         setSummary(null);
         setHoursByUser([]);
