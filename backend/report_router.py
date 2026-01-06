@@ -25,7 +25,9 @@ def week_to_dates(week: str) -> tuple[date, date]:
             detail="Invalid week format. Expected 'YYYY-Www', e.g. '2025-W01'.",
         )
 
-    first_day = datetime.strptime(f"{year}-W{week_number}-1", "%Y-W%W-%w").date()
+    jan4 = date(year, 1, 4)
+    jan4_monday = jan4 - timedelta(days=jan4.isoweekday() - 1)
+    first_day = jan4_monday + timedelta(weeks=week_number - 1)
     last_day = first_day + timedelta(days=6)
     return first_day, last_day
 
@@ -37,6 +39,17 @@ def report_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Resumen semanal del tablero.
+
+    Se alinea con la especificación de la semana 5:
+    - Completadas: tarjetas en la lista "Hecho" cuyo ``updated_at`` cae en la semana.
+    - Vencidas: tarjetas con ``due_date`` en la semana y que NO están en "Hecho".
+    - Nuevas: tarjetas cuyo ``created_at`` cae en la semana.
+
+    Devuelve listas de tareas por cada grupo para que el frontend pueda
+    mostrar tanto el contador como ejemplos (título, responsable, estado).
+    """
+
     board = get_board_by_id_and_user(db, board_id, current_user.id)
     if board is None:
         raise HTTPException(status_code=403, detail="Board not accessible")
@@ -45,8 +58,23 @@ def report_summary(
     start_dt = datetime.combine(start_date, datetime.min.time())
     end_dt = datetime.combine(end_date, datetime.max.time())
 
-    created_count = (
-        db.query(func.count(Card.id))
+    def _serialize_task_row(row) -> dict:
+        return {
+            "id": row.card_id,
+            "title": row.title,
+            "responsible": row.responsible or "Sin responsable",
+            "status": row.status or "",
+        }
+
+    # Nuevas: created_at dentro del rango semanal
+    created_rows = (
+        db.query(
+            Card.id.label("card_id"),
+            Card.title.label("title"),
+            User.email.label("responsible"),
+            ListModel.title.label("status"),
+        )
+        .outerjoin(User, User.id == Card.user_id)
         .join(ListModel, ListModel.id == Card.list_id)
         .join(Board, Board.id == ListModel.board_id)
         .filter(
@@ -55,25 +83,89 @@ def report_summary(
             Card.created_at >= start_dt,
             Card.created_at <= end_dt,
         )
-        .scalar()
-    ) or 0
+        .order_by(Card.created_at.desc())
+        .all()
+    )
 
-    completed_count = (
+    # Completadas: en lista "Hecho" y actualizadas dentro de la semana
+    completed_rows = (
+        db.query(
+            Card.id.label("card_id"),
+            Card.title.label("title"),
+            User.email.label("responsible"),
+            ListModel.title.label("status"),
+        )
+        .outerjoin(User, User.id == Card.user_id)
+        .join(ListModel, ListModel.id == Card.list_id)
+        .join(Board, Board.id == ListModel.board_id)
+        .filter(
+            Board.id == board_id,
+            Board.user_id == current_user.id,
+            ListModel.title == "Hecho",
+            Card.updated_at >= start_dt,
+            Card.updated_at <= end_dt,
+        )
+        .order_by(Card.updated_at.desc())
+        .all()
+    )
+
+    # Vencidas: due_date en la semana y NO están en "Hecho"
+    overdue_rows = (
+        db.query(
+            Card.id.label("card_id"),
+            Card.title.label("title"),
+            User.email.label("responsible"),
+            ListModel.title.label("status"),
+        )
+        .outerjoin(User, User.id == Card.user_id)
+        .join(ListModel, ListModel.id == Card.list_id)
+        .join(Board, Board.id == ListModel.board_id)
+        .filter(
+            Board.id == board_id,
+            Board.user_id == current_user.id,
+            Card.due_date != None,  # type: ignore[comparison-overlap]
+            Card.due_date >= start_dt,
+            Card.due_date <= end_dt,
+            ListModel.title != "Hecho",
+        )
+        .order_by(Card.due_date.desc())
+        .all()
+    )
+
+    # Cálculos de la semana anterior para comparativas
+    previous_start_date = start_date - timedelta(days=7)
+    previous_end_date = end_date - timedelta(days=7)
+    prev_start_dt = datetime.combine(previous_start_date, datetime.min.time())
+    prev_end_dt = datetime.combine(previous_end_date, datetime.max.time())
+
+    created_prev_count = (
         db.query(func.count(Card.id))
         .join(ListModel, ListModel.id == Card.list_id)
         .join(Board, Board.id == ListModel.board_id)
         .filter(
             Board.id == board_id,
             Board.user_id == current_user.id,
-            Card.updated_at >= start_dt,
-            Card.updated_at <= end_dt,
-            Card.due_date != None,  # type: ignore[comparison-overlap]
-            Card.due_date <= end_dt,
+            Card.created_at >= prev_start_dt,
+            Card.created_at <= prev_end_dt,
         )
         .scalar()
     ) or 0
 
-    overdue_count = (
+    completed_prev_count = (
+        db.query(func.count(Card.id))
+        .join(ListModel, ListModel.id == Card.list_id)
+        .join(Board, Board.id == ListModel.board_id)
+        .filter(
+            Board.id == board_id,
+            Board.user_id == current_user.id,
+            ListModel.title == "Hecho",
+            Card.updated_at >= prev_start_dt,
+            Card.updated_at <= prev_end_dt,
+        )
+        .scalar()
+    ) or 0
+
+    overdue_prev_count = (
         db.query(func.count(Card.id))
         .join(ListModel, ListModel.id == Card.list_id)
         .join(Board, Board.id == ListModel.board_id)
@@ -81,15 +173,26 @@ def report_summary(
             Board.id == board_id,
             Board.user_id == current_user.id,
             Card.due_date != None,  # type: ignore[comparison-overlap]
-            Card.due_date < date.today(),
+            Card.due_date >= prev_start_dt,
+            Card.due_date <= prev_end_dt,
+            ListModel.title != "Hecho",
         )
         .scalar()
     ) or 0
 
     return {
-        "created": int(created_count),
-        "completed": int(completed_count),
-        "overdue": int(overdue_count),
+        "created": [_serialize_task_row(row) for row in created_rows],
+        "completed": [_serialize_task_row(row) for row in completed_rows],
+        "overdue": [_serialize_task_row(row) for row in overdue_rows],
+        "meta": {
+            "week_start": start_date.isoformat(),
+            "week_end": end_date.isoformat(),
+            "previous_week_start": previous_start_date.isoformat(),
+            "previous_week_end": previous_end_date.isoformat(),
+            "created_prev_count": int(created_prev_count),
+            "completed_prev_count": int(completed_prev_count),
+            "overdue_prev_count": int(overdue_prev_count),
+        },
     }
 
 
@@ -155,6 +258,7 @@ def report_hours_by_card(
         db.query(
             Card.id.label("card_id"),
             Card.title.label("title"),
+            ListModel.title.label("status"),
             User.email.label("responsible"),
             func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
         )
@@ -168,7 +272,7 @@ def report_hours_by_card(
             Timesheet.date >= start_date,
             Timesheet.date <= end_date,
         )
-        .group_by(Card.id, Card.title, User.email)
+        .group_by(Card.id, Card.title, ListModel.title, User.email)
         .order_by(func.coalesce(func.sum(Timesheet.hours), 0).desc())
         .all()
     )
@@ -177,7 +281,7 @@ def report_hours_by_card(
         {
             "card_id": row.card_id,
             "title": row.title,
-            "status": "sin_estado",
+            "status": row.status,
             "responsible": row.responsible,
             "total_hours": float(row.total_hours or 0),
         }

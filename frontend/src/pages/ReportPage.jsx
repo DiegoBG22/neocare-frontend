@@ -16,6 +16,13 @@ function getCurrentWeekString() {
   return `${now.getFullYear()}-W${weekStr}`;
 }
 
+function formatShortDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+}
+
 function extractErrorMessage(err, fallback) {
   const detail = err?.response?.data?.detail;
   if (Array.isArray(detail)) {
@@ -70,6 +77,8 @@ function ReportPage({ token, onLogout }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [reloadCounter, setReloadCounter] = useState(0);
+  const [selectedUserEmail, setSelectedUserEmail] = useState(null);
 
   useEffect(() => {
     const loadBoards = async () => {
@@ -117,7 +126,7 @@ function ReportPage({ token, onLogout }) {
       }
     };
     loadReport();
-  }, [token, selectedBoardId, week]);
+  }, [token, selectedBoardId, week, reloadCounter]);
 
   const computedSummary = useMemo(() => {
     const mapRaw = (raw) => {
@@ -141,6 +150,86 @@ function ReportPage({ token, onLogout }) {
       created: mapRaw(createdRaw),
     };
   }, [summary]);
+
+  const meta = summary?.meta || null;
+
+  const weekRangeLabel = useMemo(() => {
+    if (!meta) return '';
+    return `${formatShortDate(meta.week_start)} – ${formatShortDate(meta.week_end)}`;
+  }, [meta]);
+
+  const kpiDeltas = useMemo(() => {
+    if (!meta) return null;
+    const safe = (v) => (typeof v === 'number' ? v : Number(v) || 0);
+    const createdPrev = safe(meta.created_prev_count);
+    const completedPrev = safe(meta.completed_prev_count);
+    const overduePrev = safe(meta.overdue_prev_count);
+
+    return {
+      created: {
+        prev: createdPrev,
+        diff: computedSummary.created.count - createdPrev,
+      },
+      completed: {
+        prev: completedPrev,
+        diff: computedSummary.completed.count - completedPrev,
+      },
+      overdue: {
+        prev: overduePrev,
+        diff: computedSummary.overdue.count - overduePrev,
+      },
+    };
+  }, [meta, computedSummary]);
+
+  const topUsers = useMemo(() => {
+    if (!hoursByUser || !hoursByUser.length) return [];
+    return [...hoursByUser]
+      .slice()
+      .sort((a, b) => (b.total_hours || 0) - (a.total_hours || 0))
+      .slice(0, 3);
+  }, [hoursByUser]);
+
+  const topCards = useMemo(() => {
+    if (!hoursByCard || !hoursByCard.length) return [];
+    return [...hoursByCard]
+      .slice()
+      .sort((a, b) => (b.total_hours || 0) - (a.total_hours || 0))
+      .slice(0, 3);
+  }, [hoursByCard]);
+
+  const totalHoursUsers = useMemo(
+    () => (hoursByUser || []).reduce((acc, u) => acc + (u.total_hours || 0), 0),
+    [hoursByUser],
+  );
+
+  const totalHoursCards = useMemo(
+    () => (hoursByCard || []).reduce((acc, c) => acc + (c.total_hours || 0), 0),
+    [hoursByCard],
+  );
+
+  const filteredHoursByCard = useMemo(() => {
+    if (!selectedUserEmail) return hoursByCard;
+    const target = selectedUserEmail.toLowerCase();
+    return (hoursByCard || []).filter((row) => {
+      const email =
+        row.user_email ||
+        row.responsible ||
+        row.owner ||
+        row.assignee ||
+        '';
+      return email.toLowerCase() === target;
+    });
+  }, [hoursByCard, selectedUserEmail]);
+
+  const maxUserHours = useMemo(
+    () => (hoursByUser || []).reduce((max, u) => Math.max(max, u.total_hours || 0), 0),
+    [hoursByUser],
+  );
+
+  const maxCardHours = useMemo(
+    () => (filteredHoursByCard || []).reduce((max, c) => Math.max(max, c.total_hours || 0), 0),
+    [filteredHoursByCard],
+  );
 
   const handleExportUsers = () => {
     if (!hoursByUser.length) return;
@@ -244,6 +333,15 @@ function ReportPage({ token, onLogout }) {
             >
               ← Volver al tablero
             </button>
+            <button
+              type="button"
+              className={`report-refresh-btn ${loading ? 'is-loading' : ''}`}
+              onClick={() => setReloadCounter((c) => c + 1)}
+              disabled={loading}
+            >
+              {loading && <span className="report-refresh-spinner" />}
+              <span>{loading ? 'Actualizando…' : 'Actualizar datos'}</span>
+            </button>
             <div className="report-filters">
               <label className="report-filter">
                 <span>Semana</span>
@@ -257,6 +355,12 @@ function ReportPage({ token, onLogout }) {
           </div>
         </header>
 
+        {weekRangeLabel && !loading && !error && (
+          <p style={{ marginTop: '-8px', marginBottom: '16px', color: '#64748b', fontSize: '0.8rem' }}>
+            Semana seleccionada: {weekRangeLabel}
+          </p>
+        )}
+
         {loading && <p>Cargando informe...</p>}
         {error && <p className="error">{error}</p>}
 
@@ -267,7 +371,21 @@ function ReportPage({ token, onLogout }) {
               <div className="report-summary-grid">
                 <div className="report-card">
                   <h3>Completadas</h3>
-                  <p className="report-kpi">{computedSummary.completed.count}</p>
+                  <p className="report-kpi">
+                    {computedSummary.completed.count}
+                    {kpiDeltas &&
+                      computedSummary.completed.count > 0 &&
+                      kpiDeltas.completed.diff !== 0 && (
+                      <span
+                        className={`report-kpi-delta ${
+                          kpiDeltas.completed.diff >= 0 ? 'up' : 'down'
+                        }`}
+                      >
+                        {kpiDeltas.completed.diff >= 0 ? '+' : ''}
+                        {kpiDeltas.completed.diff}
+                      </span>
+                    )}
+                  </p>
                   {computedSummary.completed.count === 0 ? (
                     <p className="report-empty">No hubo tareas completadas esta semana.</p>
                   ) : (
@@ -281,7 +399,21 @@ function ReportPage({ token, onLogout }) {
 
                 <div className="report-card">
                   <h3>Vencidas</h3>
-                  <p className="report-kpi">{computedSummary.overdue.count}</p>
+                  <p className="report-kpi">
+                    {computedSummary.overdue.count}
+                    {kpiDeltas &&
+                      computedSummary.overdue.count > 0 &&
+                      kpiDeltas.overdue.diff !== 0 && (
+                      <span
+                        className={`report-kpi-delta ${
+                          kpiDeltas.overdue.diff >= 0 ? 'up' : 'down'
+                        }`}
+                      >
+                        {kpiDeltas.overdue.diff >= 0 ? '+' : ''}
+                        {kpiDeltas.overdue.diff}
+                      </span>
+                    )}
+                  </p>
                   {computedSummary.overdue.count === 0 ? (
                     <p className="report-empty">No hubo tareas vencidas esta semana.</p>
                   ) : (
@@ -295,7 +427,21 @@ function ReportPage({ token, onLogout }) {
 
                 <div className="report-card">
                   <h3>Nuevas</h3>
-                  <p className="report-kpi">{computedSummary.created.count}</p>
+                  <p className="report-kpi">
+                    {computedSummary.created.count}
+                    {kpiDeltas &&
+                      computedSummary.created.count > 0 &&
+                      kpiDeltas.created.diff !== 0 && (
+                      <span
+                        className={`report-kpi-delta ${
+                          kpiDeltas.created.diff >= 0 ? 'up' : 'down'
+                        }`}
+                      >
+                        {kpiDeltas.created.diff >= 0 ? '+' : ''}
+                        {kpiDeltas.created.diff}
+                      </span>
+                    )}
+                  </p>
                   {computedSummary.created.count === 0 ? (
                     <p className="report-empty">No hubo nuevas tareas esta semana.</p>
                   ) : (
@@ -308,6 +454,65 @@ function ReportPage({ token, onLogout }) {
                 </div>
               </div>
             </section>
+
+            {(topUsers.length > 0 || topCards.length > 0) && (
+              <section className="report-section">
+                <div className="report-summary-grid">
+                  {topUsers.length > 0 && (
+                    <div className="report-card">
+                      <h3>Top 3 personas por horas</h3>
+                      <ul className="report-task-list">
+                        {topUsers.map((u) => (
+                          <li
+                            key={u.user_id || u.user_email}
+                            className="report-task-item"
+                          >
+                            <div className="report-task-main">
+                              <span className="report-task-title">
+                                {u.user_name || u.user_email || u.email || u.user_id}
+                              </span>
+                              <span className="report-badge report-badge-blue">
+                                {u.total_hours}h
+                              </span>
+                            </div>
+                            <div className="report-task-meta">
+                              <span>{u.tasks_count} tareas</span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {topCards.length > 0 && (
+                    <div className="report-card">
+                      <h3>Top 3 tarjetas por horas</h3>
+                      <ul className="report-task-list">
+                        {topCards.map((c) => (
+                          <li
+                            key={c.card_id || c.id}
+                            className="report-task-item"
+                          >
+                            <div className="report-task-main">
+                              <span className="report-task-title">
+                                {c.title || c.titulo || c.card_title}
+                              </span>
+                              <span className="report-badge report-badge-green">
+                                {c.total_hours}h
+                              </span>
+                            </div>
+                            <div className="report-task-meta">
+                              <span>
+                                {c.responsible || c.owner || c.assignee || 'Sin responsable'}
+                              </span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
 
             <section className="report-section">
               <div className="report-section-header">
@@ -329,14 +534,48 @@ function ReportPage({ token, onLogout }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {hoursByUser.map((row) => (
-                        <tr key={row.user_id || row.user_name || row.email}>
-                          <td>{row.user_name || row.user || row.email || row.user_id}</td>
-                          <td>{row.total_hours}</td>
-                          <td>{row.tasks_count}</td>
-                        </tr>
-                      ))}
+                      {hoursByUser.map((row) => {
+                        const email =
+                          row.user_name || row.user || row.email || row.user_id;
+                        const rowEmail = row.user_email || row.email || '';
+                        const isTop = maxUserHours > 0 && (row.total_hours || 0) === maxUserHours;
+                        const isSelected =
+                          selectedUserEmail &&
+                          selectedUserEmail.toLowerCase() === rowEmail.toLowerCase();
+                        return (
+                          <tr
+                            key={row.user_id || row.user_name || row.email}
+                            className={`${isTop ? 'report-row-highlight' : ''} ${
+                              isSelected ? 'report-row-selected' : ''
+                            }`}
+                            onClick={() =>
+                              setSelectedUserEmail((current) => {
+                                const target = rowEmail || '';
+                                if (
+                                  current &&
+                                  current.toLowerCase() === target.toLowerCase()
+                                ) {
+                                  return null;
+                                }
+                                return target || null;
+                              })
+                            }
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <td>{email}</td>
+                            <td>{row.total_hours}</td>
+                            <td>{row.tasks_count}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
+                    <tfoot>
+                      <tr>
+                        <td style={{ fontWeight: 'bold' }}>Total</td>
+                        <td style={{ fontWeight: 'bold' }}>{totalHoursUsers}</td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               )}
@@ -349,6 +588,18 @@ function ReportPage({ token, onLogout }) {
                   Exportar CSV
                 </button>
               </div>
+              {selectedUserEmail && (
+                <p className="report-filter-chip">
+                  Filtrando tarjetas por: <strong>{selectedUserEmail}</strong>
+                  <button
+                    type="button"
+                    className="chip-clear-btn"
+                    onClick={() => setSelectedUserEmail(null)}
+                  >
+                    Quitar filtro
+                  </button>
+                </p>
+              )}
               {hoursByCard.length === 0 ? (
                 <p className="report-empty">No hay horas registradas por tarjeta en esta semana.</p>
               ) : (
@@ -363,18 +614,32 @@ function ReportPage({ token, onLogout }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {hoursByCard
-                        .slice()
-                        .sort((a, b) => (b.total_hours || 0) - (a.total_hours || 0))
-                        .map((row) => (
-                          <tr key={row.card_id || row.id}>
+                      {filteredHoursByCard.map((row) => {
+                        const isTop =
+                          maxCardHours > 0 && (row.total_hours || 0) === maxCardHours;
+                        return (
+                          <tr
+                            key={row.card_id || row.id}
+                            className={isTop ? 'report-row-highlight' : ''}
+                          >
                             <td>{row.title || row.titulo || row.card_title}</td>
-                            <td>{row.responsible || row.owner || row.assignee || 'Sin responsable'}</td>
+                            <td>
+                              {row.responsible || row.owner || row.assignee || 'Sin responsable'}
+                            </td>
                             <td>{row.estado || row.status}</td>
                             <td>{row.total_hours}</td>
                           </tr>
-                        ))}
+                        );
+                      })}
                     </tbody>
+                    <tfoot>
+                      <tr>
+                        <td style={{ fontWeight: 'bold' }}>Total</td>
+                        <td></td>
+                        <td></td>
+                        <td style={{ fontWeight: 'bold' }}>{totalHoursCards}</td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               )}
