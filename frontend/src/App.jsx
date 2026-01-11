@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage.jsx';
 import BoardPage from './pages/BoardPage.jsx';
+import ReportPage from './pages/ReportPage.jsx';
 
 function App() {
   const [token, setToken] = useState(null);
@@ -24,7 +26,19 @@ function App() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  return <BoardPage token={token} onLogout={handleLogout} />;
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={<BoardPage token={token} onLogout={handleLogout} />}
+      />
+      <Route
+        path="/report"
+        element={<ReportPage token={token} onLogout={handleLogout} />}
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
 export default App;

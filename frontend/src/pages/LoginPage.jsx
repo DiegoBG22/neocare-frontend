@@ -28,7 +28,9 @@ function LoginPage({ onLogin }) {
 
   return (
     <div className="auth-container">
-      <h1>Neocare</h1>
+      {/* SECCIÓN DEL LOGO CON EL EFECTO DE LUZ */}
+      <h1 className="neocare-logo">Neocare</h1>
+      
       <h2>{mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</h2>
 
       <form onSubmit={handleSubmit} className="auth-form">

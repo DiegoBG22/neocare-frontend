@@ -35,6 +35,10 @@ Comprobar que responde:
 - Abre en el navegador: `http://localhost:8000/api/health`
 - Deberías ver algo como:
 
+> Nota (cambios recientes): Se han añadido dos nuevos campos booleanos a la entidad `Card`: `completed` y `overdue`.
+> - Desarrollo local rápido: si quieres aplicar los cambios al esquema de la base de datos recrea `backend/neocare.db` y ejecuta `python backend/create_db.py`.
+> - Producción / preservando datos: crea una migración con Alembic (`alembic revision --autogenerate -m "add card status"` y `alembic upgrade head`).
+
 ```json
 {
   "status": "OK",
@@ -106,6 +110,30 @@ También requieren header `Authorization: Bearer <token>`:
     }
     ```
 - `DELETE /api/lists/{list_id}` – Eliminar lista.
+
+### 2.4. Labels y Subtasks (Checklist)
+
+- `GET /api/cards/{card_id}/labels` – Obtener etiquetas de una tarjeta.
+- `POST /api/cards/{card_id}/labels` – Crear etiqueta en una tarjeta.
+  - Body ejemplo:
+    ```json
+    {
+      "name": "Urgente",
+      "color": "#ff0000"
+    }
+    ```
+- `DELETE /api/cards/labels/{label_id}` – Eliminar etiqueta.
+
+- `GET /api/cards/{card_id}/subtasks` – Obtener checklist (subtareas) de una tarjeta.
+- `POST /api/cards/{card_id}/subtasks` – Crear subtarea.
+  - Body ejemplo:
+    ```json
+    {
+      "title": "Revisar PR"
+    }
+    ```
+- `PATCH /api/cards/subtasks/{subtask_id}` – Actualizar subtarea (title o completed).
+- `DELETE /api/cards/subtasks/{subtask_id}` – Eliminar subtarea.
 
 ---
 
