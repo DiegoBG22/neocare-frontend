@@ -55,9 +55,10 @@ export function CardItem({ card }: Props) {
       {/* EL BOTÓN DEL RELOJ */}
       <div style={{ borderTop: "1px solid #3e415b", paddingTop: "10px", marginTop: "10px" }}>
         {!showTimeForm ? (
-          <button 
+          <button
+            type="button"
+            className="btn-registrar-tiempo"
             onClick={() => setShowTimeForm(true)}
-            style={{ background: "#4e54c8", color: "white", border: "none", padding: "5px 10px", borderRadius: "4px", cursor: "pointer", fontSize: "12px" }}
           >
             ⏱️ Registrar horas
           </button>

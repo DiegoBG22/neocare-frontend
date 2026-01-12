@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   getBoards,
@@ -75,7 +75,7 @@ function BoardPage({ token, onLogout }) {
 
   // --- NUEVOS ESTADOS PARA TIEMPO ---
   const [timingCardId, setTimingCardId] = useState(null);
-  const [hoursInput, setHoursInput] = useState("");
+  const hoursInputRef = useRef(null);
 
   // Estados de edición (RESPETADOS)
   const [editingCardId, setEditingCardId] = useState(null);
@@ -400,8 +400,9 @@ function BoardPage({ token, onLogout }) {
   };
 
   const saveHours = async (cardId) => {
-    const hoursValue = parseFloat(hoursInput);
-    if (!hoursInput || isNaN(hoursValue) || hoursValue === 0) {
+    const raw = hoursInputRef.current ? hoursInputRef.current.value : '';
+    const value = raw ? parseFloat(raw.replace(',', '.')) : NaN;
+    if (!raw || Number.isNaN(value) || value === 0) {
       setError('Introduce un número de horas válido (usa - para restar)');
       setTimeout(() => setError(''), 3000);
       return;
@@ -416,16 +417,27 @@ function BoardPage({ token, onLogout }) {
         },
         body: JSON.stringify({
           description: "Registro de tiempo",
-          hours: hoursValue,
+          hours: value,
           date: new Date().toISOString().split('T')[0],
           card_id: cardId
         })
       });
 
       if (res.ok) {
-        setSuccess('✅ Registro actualizado');
+        // Cálculo de hora estimada de fin solo al guardar, para no molestar mientras se escribe
+        let message = '✅ Registro actualizado';
+        if (value > 0) {
+          const now = new Date();
+          const end = new Date(now.getTime() + value * 60 * 60 * 1000);
+          const nowStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+          const endStr = end.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+          message = `✅ Registro actualizado. Si empiezas ahora (${nowStr}), terminarías aproximadamente a las ${endStr}.`;
+        }
+        setSuccess(message);
         setTimingCardId(null);
-        setHoursInput("");
+        if (hoursInputRef.current) {
+          hoursInputRef.current.value = '';
+        }
         setTimeout(() => setSuccess(''), 3000);
         await refreshBoardData();
       } else {
@@ -506,7 +518,13 @@ function BoardPage({ token, onLogout }) {
       <aside className="sidebar">
         <div className="sidebar-header">
           <h1 className="neocare-logo" style={{ fontSize: '1.5rem', letterSpacing: '2px', marginBottom: '20px' }}>NEOCARE</h1>
-          <button onClick={onLogout} style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Salir</button>
+          <button
+            type="button"
+            className="sidebar-logout-btn"
+            onClick={onLogout}
+          >
+            Salir
+          </button>
         </div>
         
         <div className="sidebar-scroll-container">
@@ -691,23 +709,36 @@ function BoardPage({ token, onLogout }) {
 
                                 <div style={{ marginTop: '10px', marginBottom: '10px' }}>
                                   {timingCardId === card.id ? (
-                                    <div className="timing-form-container" style={{ background: '#1e293b', padding: '8px', borderRadius: '4px', border: '1px solid #38bdf8' }}>
+                                    <div className="timing-form-container" style={{ background: '#0b1220', padding: '10px', borderRadius: '6px', border: '1px solid #38bdf8' }}>
+                                      <p style={{ margin: '0 0 6px 0', fontSize: '0.75rem', color: '#e5e7eb', fontWeight: 500 }}>
+                                        Registrar tiempo para esta tarjeta
+                                      </p>
+                                      <p style={{ margin: '0 0 6px 0', fontSize: '0.7rem', color: '#9ca3af' }}>
+                                        Horas actuales registradas: <strong>{typeof card.total_hours === 'number' ? card.total_hours : 0}h</strong>
+                                      </p>
                                       <input 
-                                        type="number" 
-                                        placeholder="Ej: 2 o -1 para restar" 
-                                        value={hoursInput} 
-                                        onChange={(e) => setHoursInput(e.target.value)}
+                                        ref={hoursInputRef}
+                                        type="text"
+                                        inputMode="decimal"
+                                        placeholder="Horas a añadir (ej: 1.5 o 1,5)"
                                         onPointerDown={(e) => e.stopPropagation()}
-                                        style={{ width: '100%', background: '#0f172a', color: 'white', border: '1px solid #334155', padding: '4px', marginBottom: '5px', borderRadius: '4px'}} 
+                                        style={{ width: '100%', background: '#020617', color: 'white', border: '1px solid #334155', padding: '6px', marginBottom: '4px', borderRadius: '4px', fontSize: '0.8rem'}} 
                                       />
-                                      <div style={{ display: 'flex', gap: '5px' }}>
-                                        <button onClick={() => saveHours(card.id)} onPointerDown={(e) => e.stopPropagation()} style={{ flex: 1, background: '#38bdf8', color: '#020617', border: 'none', borderRadius: '3px', fontWeight: 'bold', cursor: 'pointer', padding: '4px' }}>Guardar</button>
-                                        <button onClick={() => setTimingCardId(null)} onPointerDown={(e) => e.stopPropagation()} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '3px', padding: '0 8px', cursor: 'pointer' }}>X</button>
+                                      <p style={{ margin: '0 0 4px 0', fontSize: '0.7rem', color: '#9ca3af' }}>
+                                        Puedes usar un número negativo para corregir restando tiempo si te has pasado.
+                                      </p>
+                                      <div style={{ display: 'flex', gap: '5px', marginTop: '4px' }}>
+                                        <button onClick={() => saveHours(card.id)} onPointerDown={(e) => e.stopPropagation()} style={{ flex: 1, background: '#38bdf8', color: '#020617', border: 'none', borderRadius: '3px', fontWeight: 'bold', cursor: 'pointer', padding: '5px', fontSize: '0.8rem' }}>Guardar</button>
+                                        <button onClick={() => setTimingCardId(null)} onPointerDown={(e) => e.stopPropagation()} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '3px', padding: '0 10px', cursor: 'pointer', fontSize: '0.8rem' }}>Cancelar</button>
                                       </div>
                                     </div>
                                   ) : (
-                                    <button className="btn-registrar-tiempo" onClick={() => setTimingCardId(card.id)} onPointerDown={(e) => e.stopPropagation()}
-                                      style={{ marginTop: '8px', width: '100%', background: '#38bdf8', color: '#020617', border: 'none', padding: '4px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>
+                                    <button
+                                      type="button"
+                                      className="btn-registrar-tiempo"
+                                      onClick={() => setTimingCardId(card.id)}
+                                      onPointerDown={(e) => e.stopPropagation()}
+                                    >
                                       ⏱️ Registrar tiempo
                                     </button>
                                   )}

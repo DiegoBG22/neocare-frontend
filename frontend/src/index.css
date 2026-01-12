@@ -71,6 +71,25 @@ body {
   font-weight: 600;
 }
 
+.link-button {
+  margin-top: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: color 0.2s ease, opacity 0.2s ease, transform 0.15s ease;
+}
+
+.link-button:hover {
+  opacity: 1;
+  color: #e0f2fe;
+  text-decoration: underline;
+  transform: translateY(-1px);
+}
+
 /* --- Board Layout --- */
 .board-layout {
   display: flex;
@@ -88,6 +107,23 @@ body {
   flex-direction: column;
   gap: 1.5rem;
   overflow-x: hidden;
+}
+
+.sidebar-logout-btn {
+  border-radius: 999px;
+  border: 1px solid #ef4444;
+  background: transparent;
+  color: #fecaca;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-logout-btn:hover {
+  background: rgba(248, 113, 113, 0.14);
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.55);
+  transform: translateY(-1px);
 }
 
 .board-main {
@@ -622,14 +658,28 @@ input[type="number"]::-webkit-outer-spin-button {
   filter: brightness(1.2);
 }
 
-/* Botón Registrar Tiempo (Clase añadida para el brillo) */
+/* Botón Registrar Tiempo / Horas */
 .btn-registrar-tiempo {
+  margin-top: 8px;
+  width: 100%;
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: #020617;
+  border: none;
+  padding: 0.45rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
   transition: all 0.2s ease !important;
 }
 
 .btn-registrar-tiempo:hover {
   box-shadow: 0 0 15px rgba(56, 189, 248, 0.6) !important;
-  filter: brightness(1.2);
+  filter: brightness(1.12);
   transform: translateY(-1px);
 }
 
